@@ -14,13 +14,14 @@
  * - User-specific isolation (more secure than system-wide `/tmp`)
  * - Automatic cleanup by the OS
  * - Platform-appropriate temporary storage
- * - Proper permissions handling
+ * - Owner-only permissions: the log directory is created/chmod'd to `0o700` and
+ *   log files are created with `0o600` so logs are not world-readable
  *
  * To find your log directory, use `Logger.getInstance().getLogDirectory()` or check
  * the debug logs which show the directory path during initialization.
  */
 
-import { appendFileSync, existsSync, mkdirSync, promises as fs } from 'fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, promises as fs } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { inspect } from 'util';
@@ -60,7 +61,15 @@ export class Logger {
     // Only tests should force sync writes; runtime must stay non-blocking.
     this.useSyncWrites = Logger.shouldUseSyncWrites(customLogDir);
     if (!existsSync(this.logDir)) {
-      mkdirSync(this.logDir, { recursive: true });
+      mkdirSync(this.logDir, { recursive: true, mode: 0o700 });
+    }
+    // Restrict the log directory to the current user (owner-only) so logs
+    // containing hostnames, filenames, and error payloads are not world-readable.
+    // Tighten even pre-existing directories, since mkdir leaves loose perms untouched.
+    try {
+      chmodSync(this.logDir, 0o700);
+    } catch {
+      // Best-effort: some platforms or filesystems may not support chmod.
     }
   }
 
@@ -167,7 +176,7 @@ export class Logger {
 
     if (this.useSyncWrites) {
       try {
-        appendFileSync(logFile, logEntry, 'utf8');
+        appendFileSync(logFile, logEntry, { encoding: 'utf8', mode: 0o600 });
       } catch (error) {
         this.handleWriteFailure(level, logEntry, error);
       }
@@ -177,7 +186,7 @@ export class Logger {
     this.pendingWriteCount++;
     this.writeQueue = this.writeQueue
       .then(async () => {
-        await fs.appendFile(logFile, logEntry, 'utf8');
+        await fs.appendFile(logFile, logEntry, { encoding: 'utf8', mode: 0o600 });
       })
       .catch((error: unknown) => {
         this.handleWriteFailure(level, logEntry, error);

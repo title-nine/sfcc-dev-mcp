@@ -1,5 +1,5 @@
 import { Logger } from '../src/utils/logger';
-import { existsSync, readFileSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -68,6 +68,39 @@ describe('Logger', () => {
       expect(logContent).toMatch(
         /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[TEST\] \[DEBUG\] debug message\n$/,
       );
+    });
+  });
+
+  describe('file permissions', () => {
+    // Permission bits are only meaningful on POSIX platforms.
+    const skipOnWindows = process.platform === 'win32' ? it.skip : it;
+
+    skipOnWindows('should create log directory with owner-only permissions', () => {
+      logger = new Logger('TEST', true, false, testLogDir);
+
+      const mode = statSync(testLogDir).mode & 0o777;
+      expect(mode).toBe(0o700);
+    });
+
+    skipOnWindows('should tighten permissions on a pre-existing loose log directory', () => {
+      // Simulate a directory created by an older version with world-readable perms.
+      mkdirSync(testLogDir, { recursive: true, mode: 0o755 });
+
+      logger = new Logger('TEST', true, false, testLogDir);
+
+      const mode = statSync(testLogDir).mode & 0o777;
+      expect(mode).toBe(0o700);
+    });
+
+    skipOnWindows('should create log files with owner-only permissions', () => {
+      logger = new Logger('TEST', true, false, testLogDir);
+      logger.log('sensitive message');
+
+      const logFile = join(testLogDir, 'sfcc-mcp-info.log');
+      expect(existsSync(logFile)).toBe(true);
+
+      const mode = statSync(logFile).mode & 0o777;
+      expect(mode).toBe(0o600);
     });
   });
 

@@ -418,7 +418,7 @@ sfcc-dev-mcp/
 #### **Utilities** (`utils/`)
 - **Abort Utilities** (`abort-utils.ts`): Shared timeout and abort signal composition helpers used across HTTP and debugger clients for consistent cancellation behavior and timer cleanup
 - **Caching System** (`cache.ts`): Efficient caching for API responses and documentation
-- **Logging** (`logger.ts`): Structured logging with debug capabilities
+- **Logging** (`logger.ts`): Structured logging with debug capabilities; log directory is owner-only (`0o700`) and log files are created `0o600` so logs are not world-readable
 - **Path Resolution** (`path-resolver.ts`): Secure file path handling
 - **Common Utilities** (`utils.ts`): Shared utility functions
 
