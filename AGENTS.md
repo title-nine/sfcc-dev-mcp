@@ -468,6 +468,7 @@ sfcc-dev-mcp/
 8. **Code Version Tools** (2 tools)
    - Code version listing and management
    - Code version activation for deployment fixes
+   - `activate_code_version` requires explicit user confirmation: the agent must ask the user first and pass `confirm=true` (required boolean arg). Calls without `confirm=true` are rejected with `CONFIRMATION_REQUIRED`; missing `confirm` is rejected at the MCP boundary with `INVALID_TOOL_ARGUMENTS`
 
 9. **Agent Instruction Tools** (2 tools)
    - Copy or merge AGENTS.md and bundled skills into the current workspace, user home, or a temp directory

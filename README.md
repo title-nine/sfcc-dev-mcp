@@ -111,7 +111,7 @@ Complete development experience with live SFCC instance access:
 - All documentation-only features (18 tools)
 - Real-time log analysis and job logs (13 tools)
 - System object definitions (6 tools)
-- Code version management (2 tools)
+- Code version management (2 tools; `activate_code_version` requires explicit user confirmation via `confirm=true`)
 - Script debugger operations (1 tool, disabled when `disable-script-debugger` is set)
 
 ## 🏗️ Architecture Overview

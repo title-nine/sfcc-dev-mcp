@@ -154,22 +154,35 @@ describe('CodeVersionToolHandler', () => {
       });
     });
 
-    it('should handle activate_code_version with codeVersionId', async () => {
-      const args = { codeVersionId: 'version_2' };
+    it('should handle activate_code_version with codeVersionId and confirm', async () => {
+      const args = { codeVersionId: 'version_2', confirm: true };
       const result = await handler.handle('activate_code_version', args, Date.now());
 
       expect(mockClient.activateCodeVersion).toHaveBeenCalledWith('version_2');
       expect(getResultText(result)).toContain('activated successfully');
     });
 
+    it('should require explicit confirm=true before activating', async () => {
+      const result = await handler.handle(
+        'activate_code_version',
+        { codeVersionId: 'version_2', confirm: false },
+        Date.now(),
+      ) as { isError: boolean; content: Array<{ text: string }>; structuredContent?: { error?: { code?: string } } };
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain('requires explicit user confirmation');
+      expect(result.structuredContent?.error?.code).toBe('CONFIRMATION_REQUIRED');
+      expect(mockClient.activateCodeVersion).not.toHaveBeenCalled();
+    });
+
     it('should not enforce missing codeVersionId in handler (validated at MCP boundary)', async () => {
-      const result = await handler.handle('activate_code_version', {}, Date.now());
+      const result = await handler.handle('activate_code_version', { confirm: true }, Date.now());
       expect(result.isError).toBe(false);
       expect(mockClient.activateCodeVersion).toHaveBeenCalledWith(undefined);
     });
 
     it('should not enforce empty codeVersionId in handler (validated at MCP boundary)', async () => {
-      const result = await handler.handle('activate_code_version', { codeVersionId: '' }, Date.now());
+      const result = await handler.handle('activate_code_version', { codeVersionId: '', confirm: true }, Date.now());
       expect(result.isError).toBe(false);
       expect(mockClient.activateCodeVersion).toHaveBeenCalledWith('');
     });
@@ -251,7 +264,7 @@ describe('CodeVersionToolHandler', () => {
         codeVersionId: 'test_version',
       });
 
-      await handler.handle('activate_code_version', { codeVersionId: 'test_version' }, Date.now());
+      await handler.handle('activate_code_version', { codeVersionId: 'test_version', confirm: true }, Date.now());
 
       expect(mockClient.activateCodeVersion).toHaveBeenCalledWith('test_version');
     });

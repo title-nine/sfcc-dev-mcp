@@ -13,7 +13,9 @@ export const CODE_VERSION_TOOLS = [
   },
   {
     name: 'activate_code_version',
-    description: 'Activate a code version (deactivates current). Use for code-switch fixes, SCAPI endpoint issues, or deployment conflicts. Only inactive versions can be activated.',
+    description: `Activate a code version (deactivates current). Use for code-switch fixes, SCAPI endpoint issues, or deployment conflicts. Only inactive versions can be activated.
+
+IMPORTANT: Activating a code version is a deployment-affecting change. ALWAYS ASK THE USER for explicit confirmation before calling this tool, and only pass confirm=true after the user has explicitly agreed. If the user declines, do NOT call this tool.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -22,8 +24,12 @@ export const CODE_VERSION_TOOLS = [
           minLength: 1,
           description: 'ID of the inactive code version to activate.',
         },
+        confirm: {
+          type: 'boolean',
+          description: 'Must be true. Explicit user confirmation that the code version should be activated.',
+        },
       },
-      required: ['codeVersionId'],
+      required: ['codeVersionId', 'confirm'],
     },
   },
 ];

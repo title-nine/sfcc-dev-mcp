@@ -163,11 +163,11 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
   describe('activate_code_version Tool Tests', () => {
     test('should validate activation response structure', async () => {
       // First, ensure we have a clean state by activating the reset version
-      await client.callTool('activate_code_version', {
+      await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'reset_version'
       });
       
-      const result = await client.callTool('activate_code_version', {
+      const result = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'test_activation'
       });
       
@@ -195,7 +195,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       ];
       
       for (const testId of testIds) {
-        const result = await client.callTool('activate_code_version', {
+        const result = await client.callTool('activate_code_version', { confirm: true,
           codeVersionId: testId
         });
         
@@ -215,7 +215,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       assertTextContent(result1, 'codeVersionId');
       
       // Test empty string
-      const result2 = await client.callTool('activate_code_version', {
+      const result2 = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: ''
       });
       assertValidMCPResponse(result2);
@@ -223,7 +223,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       assertTextContent(result2, 'codeVersionId');
       
       // Test wrong type (number)
-      const result3 = await client.callTool('activate_code_version', {
+      const result3 = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 123
       });
       assertValidMCPResponse(result3);
@@ -231,12 +231,36 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       assertTextContent(result3, 'codeVersionId');
       
       // Test null value
-      const result4 = await client.callTool('activate_code_version', {
+      const result4 = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: null
       });
       assertValidMCPResponse(result4);
       assert.equal(result4.isError, true, 'Should be error for null value');
       assertTextContent(result4, 'codeVersionId');
+    });
+
+    test('should require explicit user confirmation before activation', async () => {
+      // confirm=false must be rejected before any OCAPI call is made
+      const confirmFalse = await client.callTool('activate_code_version', {
+        codeVersionId: 'test_activation',
+        confirm: false
+      });
+      assertValidMCPResponse(confirmFalse);
+      assert.equal(confirmFalse.isError, true, 'Should be error without explicit confirmation');
+      assert.ok(
+        confirmFalse.content[0].text.includes('requires explicit user confirmation'),
+        'Should explain confirmation is required'
+      );
+      assert.equal(confirmFalse.structuredContent.error.code, 'CONFIRMATION_REQUIRED');
+
+      // Missing confirm must be rejected at the MCP boundary
+      const missingConfirm = await client.callTool('activate_code_version', {
+        codeVersionId: 'test_activation'
+      });
+      assertValidMCPResponse(missingConfirm);
+      assert.equal(missingConfirm.isError, true, 'Should be error when confirm is missing');
+      assert.ok(missingConfirm.content[0].text.includes('confirm is required'));
+      assert.equal(missingConfirm.structuredContent.error.code, 'INVALID_TOOL_ARGUMENTS');
     });
   });
 
@@ -257,7 +281,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
         const targetVersion = inactiveVersions[0];
         
         // Step 3: Activate the inactive version
-        const activateResult = await client.callTool('activate_code_version', {
+        const activateResult = await client.callTool('activate_code_version', { confirm: true,
           codeVersionId: targetVersion.id
         });
         
@@ -272,14 +296,14 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
 
     test('should validate workflow with activation timestamps', async () => {
       // Reset to known state first
-      await client.callTool('activate_code_version', {
+      await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'reset_version'
       });
       
       const testVersionId = 'workflow_test_version';
       
       // Activate a test version
-      const activateResult = await client.callTool('activate_code_version', {
+      const activateResult = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: testVersionId
       });
       
@@ -300,7 +324,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
 
     test('should handle sequential activations correctly', async () => {
       // Reset to a known state first
-      await client.callTool('activate_code_version', {
+      await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'reset_version'
       });
       
@@ -309,7 +333,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       
       // Activate versions sequentially
       for (const versionId of testVersions) {
-        const result = await client.callTool('activate_code_version', {
+        const result = await client.callTool('activate_code_version', { confirm: true,
           codeVersionId: versionId
         });
         
@@ -397,11 +421,11 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
 
     test('should handle edge cases and malformed inputs gracefully', async () => {
       const edgeCaseInputs = [
-        { codeVersionId: ' ' }, // Whitespace only
-        { codeVersionId: '    trimmed_spaces    ' }, // Spaces around ID
-        { codeVersionId: 'very_long_version_id_that_exceeds_normal_limits_but_should_still_work' },
-        { codeVersionId: '123' }, // Numeric string
-        { codeVersionId: 'version-with-special-chars!@#' }, // Special characters
+        { confirm: true, codeVersionId: ' ' }, // Whitespace only
+        { confirm: true, codeVersionId: '    trimmed_spaces    ' }, // Spaces around ID
+        { confirm: true, codeVersionId: 'very_long_version_id_that_exceeds_normal_limits_but_should_still_work' },
+        { confirm: true, codeVersionId: '123' }, // Numeric string
+        { confirm: true, codeVersionId: 'version-with-special-chars!@#' }, // Special characters
       ];
       
       for (const input of edgeCaseInputs) {
@@ -431,7 +455,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       assert.ok(data.data.length >= 0, 'Should still return code versions after error');
       
       // Verify activation still works after error
-      const activateResult = await client.callTool('activate_code_version', {
+      const activateResult = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'recovery_test'
       });
       assert.equal(activateResult.isError, false, 'Should be able to activate after error');
@@ -498,7 +522,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
 
     test('should simulate real deployment scenario workflow', async () => {
       // Reset to known state first
-      await client.callTool('activate_code_version', {
+      await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'reset_version'
       });
       
@@ -513,7 +537,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       
       // 2. Prepare for deployment (activate a test version)
       const deploymentVersion = 'deployment_simulation_v1';
-      const deployResult = await client.callTool('activate_code_version', {
+      const deployResult = await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: deploymentVersion
       });
       
@@ -539,7 +563,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
   describe('Performance and Reliability Tests', () => {
     test('should handle multiple sequential operations reliably', async () => {
       // Reset to known state first
-      await client.callTool('activate_code_version', {
+      await client.callTool('activate_code_version', { confirm: true,
         codeVersionId: 'reset_version'
       });
       
@@ -563,7 +587,7 @@ describe('SFCC Code Versions Tools - Full Mode Programmatic Tests', () => {
       
       // Perform multiple activate operations
       for (let i = 0; i < 3; i++) {
-        const result = await client.callTool('activate_code_version', {
+        const result = await client.callTool('activate_code_version', { confirm: true,
           codeVersionId: `reliability_test_${i}`
         });
         operationResults.push({

@@ -84,6 +84,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "reset_version"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -109,6 +110,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test_activation"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -133,6 +135,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "simple_id"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -157,6 +160,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "version-with-dashes"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -184,6 +188,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "version-with-dashes"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -211,6 +216,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "reset_version"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -261,6 +267,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: ""
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -285,6 +292,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: null
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -301,6 +309,66 @@ tests:
       maxResponseTime: "1000ms"
 
   # ==================================================================================
+  # CONFIRMATION REQUIREMENT TESTS
+  # ==================================================================================
+  - it: "should reject activation without explicit confirm=true"
+    request:
+      jsonrpc: "2.0"
+      id: "confirm-required"
+      method: "tools/call"
+      params:
+        name: "activate_code_version"
+        arguments:
+          codeVersionId: "test_activation"
+          confirm: false
+    expect:
+      response:
+        jsonrpc: "2.0"
+        id: "confirm-required"
+        result:
+          content:
+            match:arrayElements:
+              type: "text"
+              text: "match:contains:requires explicit user confirmation"
+          isError: true
+          structuredContent:
+            match:partial:
+              error:
+                match:partial:
+                  code: "CONFIRMATION_REQUIRED"
+      stderr: "toBeEmpty"
+    performance:
+      maxResponseTime: "1000ms"
+
+  - it: "should reject activation when confirm argument is missing"
+    request:
+      jsonrpc: "2.0"
+      id: "confirm-missing"
+      method: "tools/call"
+      params:
+        name: "activate_code_version"
+        arguments:
+          codeVersionId: "test_activation"
+    expect:
+      response:
+        jsonrpc: "2.0"
+        id: "confirm-missing"
+        result:
+          content:
+            match:arrayElements:
+              type: "text"
+              text: "match:contains:confirm is required"
+          isError: true
+          structuredContent:
+            match:partial:
+              error:
+                match:partial:
+                  code: "INVALID_TOOL_ARGUMENTS"
+      stderr: "toBeEmpty"
+    performance:
+      maxResponseTime: "1000ms"
+
+  # ==================================================================================
   # BASIC FUNCTIONALITY TESTS (Using Non-Existent Code Version)
   # ==================================================================================
   - it: "should handle non-existent code version gracefully"
@@ -312,6 +380,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-version-nonexistent"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -336,6 +405,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "invalid@#$%^&*()"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -363,6 +433,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-nonexistent"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -386,6 +457,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-fault-info"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -411,6 +483,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-performance"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -438,6 +511,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-very-long-code-version-id-that-exceeds-normal-length-expectations-and-might-cause-issues"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -462,6 +536,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-version-with-spaces and-chars"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -489,6 +564,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-consistency-1"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"
@@ -511,6 +587,7 @@ tests:
         name: "activate_code_version"
         arguments:
           codeVersionId: "test-consistency-2"
+          confirm: true
     expect:
       response:
         jsonrpc: "2.0"

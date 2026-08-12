@@ -79,17 +79,17 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       assert.ok(missingResult.content[0].text.includes('codeVersionId'));
 
       // Test empty string
-      const emptyResult = await client.callTool('activate_code_version', { codeVersionId: '' });
+      const emptyResult = await client.callTool('activate_code_version', { confirm: true, codeVersionId: '' });
       assert.equal(emptyResult.isError, true);
       assert.ok(emptyResult.content[0].text.includes('codeVersionId'));
 
       // Test null value
-      const nullResult = await client.callTool('activate_code_version', { codeVersionId: null });
+      const nullResult = await client.callTool('activate_code_version', { confirm: true, codeVersionId: null });
       assert.equal(nullResult.isError, true);
       assert.ok(nullResult.content[0].text.includes('codeVersionId'));
 
       // Test undefined value
-      const undefinedResult = await client.callTool('activate_code_version', { codeVersionId: undefined });
+      const undefinedResult = await client.callTool('activate_code_version', { confirm: true, codeVersionId: undefined });
       assert.equal(undefinedResult.isError, true);
       assert.ok(undefinedResult.content[0].text.includes('codeVersionId'));
     });
@@ -105,7 +105,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       ];
 
       for (const invalidFormat of invalidFormats) {
-        const result = await client.callTool('activate_code_version', { codeVersionId: invalidFormat });
+        const result = await client.callTool('activate_code_version', { confirm: true, codeVersionId: invalidFormat });
         assert.equal(result.isError, true, `Should reject ${typeof invalidFormat}: ${JSON.stringify(invalidFormat)}`);
         assert.ok(result.content[0].text.includes('codeVersionId'));
       }
@@ -123,7 +123,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       ];
 
       for (const edgeCase of validFormatEdgeCases) {
-        const result = await client.callTool('activate_code_version', { codeVersionId: edgeCase });
+        const result = await client.callTool('activate_code_version', { confirm: true, codeVersionId: edgeCase });
         assert.equal(result.isError, true, `Should handle edge case: ${edgeCase}`);
         
         // Should get 404 or similar SFCC error for valid-format but non-existent versions
@@ -144,7 +144,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       ];
 
       for (const edgeCase of invalidFormatEdgeCases) {
-        const result = await client.callTool('activate_code_version', { codeVersionId: edgeCase });
+        const result = await client.callTool('activate_code_version', { confirm: true, codeVersionId: edgeCase });
         assert.equal(result.isError, true, `Should reject invalid format: ${edgeCase}`);
         
         // Should get client-side validation error for invalid format
@@ -161,7 +161,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
   // ==================================================================================
   describe('SFCC API Error Handling and Response Parsing', () => {
     test('should parse and format SFCC API errors correctly', async () => {
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'nonexistent-test-version-12345' 
       });
       
@@ -191,7 +191,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       const errorResponses = [];
       
       for (const versionId of testVersions) {
-        const result = await client.callTool('activate_code_version', { codeVersionId: versionId });
+        const result = await client.callTool('activate_code_version', { confirm: true, codeVersionId: versionId });
         assert.equal(result.isError, true);
         errorResponses.push(result.content[0].text);
       }
@@ -205,7 +205,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
 
     test('should handle malformed SFCC API responses gracefully', async () => {
       // Test with version ID that might cause unusual API responses
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'test-malformed-response-handling' 
       });
       
@@ -230,7 +230,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       assert.ok(versionsText.length > 0, 'Should return version information');
       
       // Step 2: Try to activate a clearly non-existent version
-      const activateResult = await client.callTool('activate_code_version', { 
+      const activateResult = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'workflow-test-nonexistent-version' 
       });
       assert.equal(activateResult.isError, true, 'Should fail for non-existent version');
@@ -243,9 +243,9 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     test('should maintain consistent state across multiple tool calls', async () => {
       const operations = [
         { tool: 'get_code_versions', args: {} },
-        { tool: 'activate_code_version', args: { codeVersionId: 'test-state-consistency-1' } },
+        { tool: 'activate_code_version', args: { confirm: true, codeVersionId: 'test-state-consistency-1' } },
         { tool: 'get_code_versions', args: {} },
-        { tool: 'activate_code_version', args: { codeVersionId: 'test-state-consistency-2' } },
+        { tool: 'activate_code_version', args: { confirm: true, codeVersionId: 'test-state-consistency-2' } },
         { tool: 'get_code_versions', args: {} },
       ];
 
@@ -281,11 +281,11 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
   describe('Error Recovery and Resilience Testing', () => {
     test('should recover gracefully from various error scenarios', async () => {
       const errorScenarios = [
-        { description: 'Empty codeVersionId', args: { codeVersionId: '' } },
-        { description: 'Very long codeVersionId', args: { codeVersionId: 'x'.repeat(500) } },
-        { description: 'Special characters', args: { codeVersionId: '!@#$%^&*()_+{}|:"<>?[]\\;\',./' } },
-        { description: 'Unicode characters', args: { codeVersionId: '测试版本号码' } },
-        { description: 'SQL injection attempt', args: { codeVersionId: "'; DROP TABLE versions; --" } },
+        { description: 'Empty codeVersionId', args: { confirm: true, codeVersionId: '' } },
+        { description: 'Very long codeVersionId', args: { confirm: true, codeVersionId: 'x'.repeat(500) } },
+        { description: 'Special characters', args: { confirm: true, codeVersionId: '!@#$%^&*()_+{}|:"<>?[]\\;\',./' } },
+        { description: 'Unicode characters', args: { confirm: true, codeVersionId: '测试版本号码' } },
+        { description: 'SQL injection attempt', args: { confirm: true, codeVersionId: "'; DROP TABLE versions; --" } },
       ];
 
       for (const scenario of errorScenarios) {
@@ -303,7 +303,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     });
 
     test('should handle rapid sequential activation attempts', async () => {
-      const rapidRequests = Array.from({ length: 10 }, (_, i) => ({
+      const rapidRequests = Array.from({ length: 10 }, (_, i) => ({ confirm: true,
         codeVersionId: `rapid-test-version-${i}`
       }));
 
@@ -328,7 +328,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
 
     test('should maintain error isolation between requests', async () => {
       // Generate error
-      const errorResult = await client.callTool('activate_code_version', { codeVersionId: '' });
+      const errorResult = await client.callTool('activate_code_version', { confirm: true, codeVersionId: '' });
       assert.equal(errorResult.isError, true);
       
       // Verify normal operation still works
@@ -336,7 +336,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       assert.equal(normalResult.isError, false, 'Normal operations should work after errors');
       
       // Generate different error
-      const errorResult2 = await client.callTool('activate_code_version', { codeVersionId: 'another-error-test' });
+      const errorResult2 = await client.callTool('activate_code_version', { confirm: true, codeVersionId: 'another-error-test' });
       assert.equal(errorResult2.isError, true);
       
       // Verify isolation - errors should be different
@@ -351,9 +351,9 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     test('should return consistent response structure across all scenarios', async () => {
       const testScenarios = [
         { name: 'missing parameter', args: {} },
-        { name: 'empty parameter', args: { codeVersionId: '' } },
-        { name: 'valid format nonexistent version', args: { codeVersionId: 'test-structure-validation' } },
-        { name: 'special characters', args: { codeVersionId: 'test!@#$' } },
+        { name: 'empty parameter', args: { confirm: true, codeVersionId: '' } },
+        { name: 'valid format nonexistent version', args: { confirm: true, codeVersionId: 'test-structure-validation' } },
+        { name: 'special characters', args: { confirm: true, codeVersionId: 'test!@#$' } },
       ];
 
       for (const scenario of testScenarios) {
@@ -387,7 +387,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       ];
       
       for (const versionId of errorCases) {
-        const result = await client.callTool('activate_code_version', { codeVersionId: versionId });
+        const result = await client.callTool('activate_code_version', { confirm: true, codeVersionId: versionId });
         results.push(result.content[0].text);
       }
       
@@ -405,7 +405,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
   describe('Business Logic and Workflow Validation', () => {
     test('should enforce code version management business rules', async () => {
       // Test that we get appropriate error for non-existent versions
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'business-logic-test-version' 
       });
       
@@ -426,7 +426,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       // According to tool description: "Only inactive code versions can be activated"
       // For non-existent versions, we should get appropriate error
       
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'precondition-test-version' 
       });
       
@@ -437,7 +437,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     });
 
     test('should provide informative error messages for troubleshooting', async () => {
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'troubleshooting-test-version' 
       });
       
@@ -467,7 +467,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     test('should handle operations within reasonable time bounds', async () => {
       const startTime = Date.now();
       
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'performance-test-version' 
       });
       
@@ -487,7 +487,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       for (let i = 0; i < testCalls; i++) {
         const startTime = Date.now();
         
-        await client.callTool('activate_code_version', { 
+        await client.callTool('activate_code_version', { confirm: true, 
           codeVersionId: `consistency-test-${i}` 
         });
         
@@ -509,14 +509,14 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     test('should handle stress scenarios gracefully', async () => {
       // Test with various payload sizes and complexity
       const stressTests = [
-        { name: 'Long version ID', codeVersionId: 'stress-test-' + 'x'.repeat(200) },
-        { name: 'Complex characters', codeVersionId: 'stress-测试-🔥-version-!@#$%^&*()' },
-        { name: 'JSON-like string', codeVersionId: '{"version": "test", "data": [1,2,3]}' },
-        { name: 'XML-like string', codeVersionId: '<version>test</version><data>stress</data>' },
+        { confirm: true, name: 'Long version ID', codeVersionId: 'stress-test-' + 'x'.repeat(200) },
+        { confirm: true, name: 'Complex characters', codeVersionId: 'stress-测试-🔥-version-!@#$%^&*()' },
+        { confirm: true, name: 'JSON-like string', codeVersionId: '{"version": "test", "data": [1,2,3]}' },
+        { confirm: true, name: 'XML-like string', codeVersionId: '<version>test</version><data>stress</data>' },
       ];
 
       for (const stressTest of stressTests) {
-        const result = await client.callTool('activate_code_version', { 
+        const result = await client.callTool('activate_code_version', { confirm: true, 
           codeVersionId: stressTest.codeVersionId 
         });
         
@@ -547,7 +547,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       for (const lengthTest of lengthTests) {
         const longVersionId = 'test-' + 'x'.repeat(lengthTest.length - 5);
         
-        const result = await client.callTool('activate_code_version', { 
+        const result = await client.callTool('activate_code_version', { confirm: true, 
           codeVersionId: longVersionId 
         });
         
@@ -567,7 +567,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       ];
 
       for (const encodingTest of encodingTests) {
-        const result = await client.callTool('activate_code_version', { 
+        const result = await client.callTool('activate_code_version', { confirm: true, 
           codeVersionId: encodingTest.value 
         });
         
@@ -584,10 +584,10 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
     test('should validate parameter completeness and format', async () => {
       // Test various parameter scenarios
       const parameterTests = [
-        { name: 'Extra parameters', args: { codeVersionId: 'test', extraParam: 'should-be-ignored' } },
+        { name: 'Extra parameters', args: { confirm: true, codeVersionId: 'test', extraParam: 'should-be-ignored' } },
         { name: 'Case variations', args: { CodeVersionId: 'test-case' } }, // Wrong case
-        { name: 'Nested object', args: { codeVersionId: { nested: 'test' } } },
-        { name: 'Array value', args: { codeVersionId: ['test', 'array'] } },
+        { name: 'Nested object', args: { confirm: true, codeVersionId: { nested: 'test' } } },
+        { name: 'Array value', args: { confirm: true, codeVersionId: ['test', 'array'] } },
       ];
 
       for (const paramTest of parameterTests) {
@@ -617,7 +617,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
   describe('Mock Validation and Testing Environment', () => {
     test('should validate we are testing against mock/sandbox environment', async () => {
       // Ensure we're not accidentally testing against production
-      const result = await client.callTool('activate_code_version', { 
+      const result = await client.callTool('activate_code_version', { confirm: true, 
         codeVersionId: 'PRODUCTION-SAFETY-CHECK-DO-NOT-ACTIVATE' 
       });
       
@@ -640,7 +640,7 @@ describe('activate_code_version Advanced Programmatic Tests (Full Mode)', () => 
       // Call the same operation multiple times
       const results = [];
       for (let i = 0; i < 3; i++) {
-        const result = await client.callTool('activate_code_version', { 
+        const result = await client.callTool('activate_code_version', { confirm: true, 
           codeVersionId: testVersion 
         });
         results.push(result);

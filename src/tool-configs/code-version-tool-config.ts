@@ -1,5 +1,4 @@
-import { GenericToolSpec, ToolExecutionContext } from '../core/handlers/base-handler.js';
-import { ToolArguments } from '../core/handlers/base-handler.js';
+import { GenericToolSpec, ToolExecutionContext, ToolArguments, HandlerError } from '../core/handlers/base-handler.js';
 import { OCAPICodeVersionsClient } from '../clients/ocapi/code-versions-client.js';
 
 export const CODE_VERSION_TOOL_NAMES = [
@@ -24,6 +23,16 @@ export const CODE_VERSION_TOOL_CONFIG: Record<CodeVersionToolName, GenericToolSp
   },
 
   activate_code_version: {
+    validate: (args: ToolArguments, toolName: string) => {
+      if (args.confirm !== true) {
+        throw new HandlerError(
+          'Activating a code version is a deployment-affecting change and requires explicit user confirmation. Ask the user first, then retry with confirm=true.',
+          toolName,
+          'CONFIRMATION_REQUIRED',
+          { field: 'confirm', expected: true, actual: args.confirm },
+        );
+      }
+    },
     exec: async (args: ToolArguments, context: ToolExecutionContext) => {
       const client = context.codeVersionsClient as OCAPICodeVersionsClient;
       return client.activateCodeVersion(args.codeVersionId as string);

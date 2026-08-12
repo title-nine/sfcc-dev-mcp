@@ -460,8 +460,11 @@ export const tools: ToolMeta[] = [
     name: 'activate_code_version',
     category: 'Code Versions',
     mode: 'full',
-    description: 'Activate a specific code version.',
-    params: [p('codeVersionId', 'ID of code version')],
+    description: 'Activate a specific code version. Deployment-affecting: ALWAYS ask the user first and pass confirm=true only after explicit consent.',
+    params: [
+      p('codeVersionId', 'ID of code version'),
+      p('confirm', 'Must be true. Explicit user confirmation before activating')
+    ],
     examples: ['Activate code version int_2025_09']
   },
   {
