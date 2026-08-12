@@ -42,7 +42,7 @@ export const tools: ToolMeta[] = [
     name: 'sync_agent_instructions',
     category: 'Agent Instructions',
     mode: 'both',
-    description: 'Copy/merge AGENTS.md and bundled SFCC skills into a project, user home, or a temp directory. AI agents should ask user permission before calling this tool. Users can disable this suggestion by creating mcp-dev.json with {"disableAgentSync": true}.',
+    description: 'Copy/merge AGENTS.md and bundled SFCC skills into a project, user home, or a temp directory. AI agents should ask user permission before calling this tool. Writes outside the workspace (user/temp with dryRun=false) require confirm=true. Users can disable this suggestion by creating mcp-dev.json with {"disableAgentSync": true}.',
     params: [
       p('destinationType', 'project|user|temp (default: project)', false),
       p('preferredRoot', 'Optional workspace root path or name when multiple roots exist', false),
@@ -52,7 +52,8 @@ export const tools: ToolMeta[] = [
       p('includeSkills', 'Copy skills (boolean, default: true)', false),
       p('installMissingOnly', 'Only copy missing skills (boolean, default: true)', false),
       p('dryRun', 'Plan actions without writing (boolean, default: true)', false),
-      p('tempDir', 'Custom temp directory when destinationType=temp', false)
+      p('tempDir', 'Custom temp directory when destinationType=temp (blocked if inside system/sensitive dirs)', false),
+      p('confirm', 'Must be true when writing to user/temp destination (dryRun=false)', false)
     ],
     examples: [
       'Sync agent instructions into this SFCC project (dryRun=false)',

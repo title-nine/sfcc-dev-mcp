@@ -104,7 +104,7 @@ Perfect for learning and development, no SFCC instance required:
 - SFRA documentation (5 tools)
 - ISML template documentation (5 tools)
 - Cartridge generation (1 tool, writes constrained to workspace roots/cwd)
-- Agent instruction bootstrap (2 tools) to copy/merge AGENTS.md and skills, or disable future prompts
+- Agent instruction bootstrap (2 tools) to copy/merge AGENTS.md and skills, or disable future prompts (writes outside the workspace require explicit `confirm=true`; custom temp paths in system/sensitive dirs are rejected)
 
 ### Full Mode  
 Complete development experience with live SFCC instance access:

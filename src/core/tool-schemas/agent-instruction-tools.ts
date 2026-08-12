@@ -56,6 +56,10 @@ export const AGENT_INSTRUCTION_TOOLS = [
           minLength: 1,
           description: 'Custom directory to use when destinationType is temp.',
         },
+        confirm: {
+          type: 'boolean',
+          description: 'Required for writes outside the current workspace (destinationType "user" or "temp" with dryRun=false). Must be true, and only after the user has explicitly agreed to install instructions there.',
+        },
       },
     },
   },

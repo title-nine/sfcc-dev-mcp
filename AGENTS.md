@@ -473,6 +473,8 @@ sfcc-dev-mcp/
 9. **Agent Instruction Tools** (2 tools)
    - Copy or merge AGENTS.md and bundled skills into the current workspace, user home, or a temp directory
    - Supports dry-run planning, append/replace/skip strategies, and missing-only installs
+   - Writes outside the current workspace (`destinationType` `user` or `temp` with `dryRun=false`) require explicit user confirmation via `confirm=true`; missing `confirm` is rejected with `CONFIRMATION_REQUIRED` before any file is written
+   - Custom `tempDir` paths are rejected with an error when they resolve inside blocked system directories (`/etc`, `/proc`, `/root`, ...) or sensitive segments (`~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.config/gcloud`)
 
 10. **Script Debugger Tools** (1 tool)
    - Invoke script debugger flows for runtime troubleshooting

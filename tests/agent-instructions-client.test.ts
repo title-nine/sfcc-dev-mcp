@@ -108,4 +108,39 @@ describe('AgentInstructionsClient', () => {
       rmSync(tempHome, { recursive: true, force: true });
     }
   });
+
+  it('rejects custom tempDir inside a blocked system directory', async () => {
+    const client = new AgentInstructionsClient(createWorkspaceRootsService(tempRoot));
+
+    await expect(client.syncInstructions({
+      destinationType: 'temp',
+      dryRun: true,
+      tempDir: '/etc',
+    })).rejects.toThrow('Temp directory path is not allowed');
+  });
+
+  it('rejects custom tempDir inside a sensitive segment like .ssh', async () => {
+    const client = new AgentInstructionsClient(createWorkspaceRootsService(tempRoot));
+    const sshPath = path.join(tempRoot, '.ssh');
+
+    await expect(client.syncInstructions({
+      destinationType: 'temp',
+      dryRun: true,
+      tempDir: sshPath,
+    })).rejects.toThrow('Temp directory path is not allowed');
+  });
+
+  it('accepts a valid custom tempDir', async () => {
+    const validTarget = path.join(tempRoot, 'valid-target');
+    mkdirSync(validTarget, { recursive: true });
+
+    const client = new AgentInstructionsClient(createWorkspaceRootsService(tempRoot));
+    const result = await client.syncInstructions({
+      destinationType: 'temp',
+      dryRun: true,
+      tempDir: validTarget,
+    });
+
+    expect(result.plan.basePath).toBe(validTarget);
+  });
 });

@@ -4,6 +4,7 @@ import os from 'os';
 import { Logger } from '../utils/logger.js';
 import { PathResolver } from '../utils/path-resolver.js';
 import { WorkspaceRootsService } from '../config/workspace-roots.js';
+import { isBlockedResolvedPath } from '../config/path-security-policy.js';
 
 const WORKSPACE_SKILLS_DIRS = [
   '.github/skills',
@@ -222,6 +223,15 @@ export class AgentInstructionsClient {
     const resolvedTemp = tempDir
       ? path.resolve(tempDir)
       : path.join(os.tmpdir(), 'sfcc-dev-mcp-ai-instructions');
+
+    // Block writes into system directories or sensitive segments (e.g. ~/.ssh, ~/.aws)
+    // when the user supplies a custom temp directory.
+    if (isBlockedResolvedPath(resolvedTemp)) {
+      throw new Error(
+        'Temp directory path is not allowed. Choose a path outside system and sensitive directories.',
+      );
+    }
+
     return resolvedTemp;
   }
 

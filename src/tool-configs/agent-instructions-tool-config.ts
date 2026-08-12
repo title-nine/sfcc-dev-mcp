@@ -1,4 +1,4 @@
-import { GenericToolSpec, ToolArguments } from '../core/handlers/base-handler.js';
+import { GenericToolSpec, ToolArguments, HandlerError } from '../core/handlers/base-handler.js';
 import { AgentInstructionsClient } from '../clients/agent-instructions-client.js';
 import { InstructionAdvisor } from '../core/instruction-advisor.js';
 
@@ -15,6 +15,21 @@ export const AGENT_INSTRUCTION_TOOL_CONFIG: Record<
   GenericToolSpec<ToolArguments, unknown>
 > = {
   sync_agent_instructions: {
+    validate: (args: ToolArguments, toolName: string) => {
+      const destinationType = args.destinationType ?? 'project';
+      const dryRun = args.dryRun ?? true;
+      const writesOutsideWorkspace =
+        (destinationType === 'user' || destinationType === 'temp') && dryRun !== true;
+
+      if (writesOutsideWorkspace && args.confirm !== true) {
+        throw new HandlerError(
+          'Installing agent instructions outside the current workspace (user home or temp directory) writes files outside your project and requires explicit user confirmation. Ask the user first, then retry with confirm=true.',
+          toolName,
+          'CONFIRMATION_REQUIRED',
+          { field: 'confirm', destinationType, dryRun },
+        );
+      }
+    },
     exec: async (args: ToolArguments, context) => {
       const client = context.agentInstructionsClient as AgentInstructionsClient;
       return client.syncInstructions({
