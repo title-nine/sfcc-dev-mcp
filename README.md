@@ -48,6 +48,7 @@ Create a `dw.json` file with your SFCC credentials. You can use either auth mode
 - Basic auth: `username` + `password`
 - OAuth: `client-id` + `client-secret`
 - Optional storefront auth (for script debugger trigger on Basic-Auth storefronts): `storefrontUsername` + `storefrontPassword`
+- Optional security flag to disable the script debugger tool (arbitrary code execution): `"disable-script-debugger": true`
 ```json
 {
   "hostname": "your-instance.sandbox.us01.dx.commercecloud.salesforce.com",
@@ -62,6 +63,8 @@ Create a `dw.json` file with your SFCC credentials. You can use either auth mode
 
 At least one complete credential pair is required when `hostname` is set.
 If credentials are provided, `hostname` is also required.
+
+> **Security**: The script debugger tool (`evaluate_script`) executes arbitrary JavaScript on your SFCC instance with the configured credentials' privileges. To hard-disable it, set `"disable-script-debugger": true` in `dw.json` or `SFCC_DISABLE_SCRIPT_DEBUGGER=true` in the environment. When disabled, the tool is hidden from `tools/list` and rejected at `tools/call` with a `TOOL_NOT_AVAILABLE` error.
 
 ### Option 3: Auto-Discovery (Recommended for VS Code users)
 Simply open a VS Code workspace that contains a `dw.json` file - the server will automatically discover and use it:
@@ -83,7 +86,7 @@ The server discovers SFCC credentials in this order (highest priority first):
 | Priority | Source | Description |
 |----------|--------|-------------|
 | **1** | `--dw-json` CLI parameter | Explicit path to dw.json file |
-| **2** | Environment variables | `SFCC_HOSTNAME`, `SFCC_USERNAME`, `SFCC_PASSWORD`, `SFCC_CLIENT_ID`, `SFCC_CLIENT_SECRET` |
+| **2** | Environment variables | `SFCC_HOSTNAME`, `SFCC_USERNAME`, `SFCC_PASSWORD`, `SFCC_CLIENT_ID`, `SFCC_CLIENT_SECRET`, `SFCC_DISABLE_SCRIPT_DEBUGGER` (optional `true`/`false` kill switch) |
 | **3** | MCP workspace roots | Automatically discovers dw.json in your VS Code workspace folder(s), and refreshes when the client sends `notifications/roots/list_changed` |
 
 > **Note**: The server no longer searches the current working directory by default, as MCP servers often start with `cwd` set to the user's home directory. The MCP workspace roots mechanism provides reliable project context.
@@ -109,7 +112,7 @@ Complete development experience with live SFCC instance access:
 - Real-time log analysis and job logs (13 tools)
 - System object definitions (6 tools)
 - Code version management (2 tools)
-- Script debugger operations (1 tool)
+- Script debugger operations (1 tool, disabled when `disable-script-debugger` is set)
 
 ## 🏗️ Architecture Overview
 

@@ -317,7 +317,8 @@ export class SFCCDevServer {
       current.password === next.password &&
       current.clientId === next.clientId &&
       current.clientSecret === next.clientSecret &&
-      current.siteId === next.siteId;
+      current.siteId === next.siteId &&
+      current.disableScriptDebugger === next.disableScriptDebugger;
   }
 
   // Register modular handlers (each encapsulates its own responsibility)
@@ -362,6 +363,7 @@ export class SFCCDevServer {
         getCapabilitySnapshot: () => ({
           logCapabilityState: this.logCapabilityState,
           canAccessOCAPI: this.capabilities.canAccessOCAPI,
+          canUseScriptDebugger: this.getCanUseScriptDebugger(),
         }),
         toolArgumentValidator: this.toolArgumentValidator,
         getPreflightNotice: async () => await this.instructionAdvisor.getNotice(),
@@ -369,8 +371,16 @@ export class SFCCDevServer {
     );
   }
 
+  private getCanUseScriptDebugger(): boolean {
+    return !this.config.disableScriptDebugger;
+  }
+
   private getAvailableTools(): ToolDefinition[] {
-    return getAvailableTools(this.logCapabilityState, this.capabilities.canAccessOCAPI);
+    return getAvailableTools(
+      this.logCapabilityState,
+      this.capabilities.canAccessOCAPI,
+      this.getCanUseScriptDebugger(),
+    );
   }
 
   private isToolAvailable(toolName: string): boolean {
@@ -378,6 +388,7 @@ export class SFCCDevServer {
       toolName,
       this.logCapabilityState,
       this.capabilities.canAccessOCAPI,
+      this.getCanUseScriptDebugger(),
       this.toolNameSets,
     );
   }

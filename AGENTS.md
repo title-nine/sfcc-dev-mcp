@@ -477,6 +477,7 @@ sfcc-dev-mcp/
    - Invoke script debugger flows for runtime troubleshooting
    - Supports custom storefront trigger URL/path input (full URLs, `/s/...`, `/on/demandware.store/...`, or site-relative paths resolved to `/s/{siteId}/...`)
    - Supports credentialed debugging workflows in full mode
+   - Arbitrary code execution: the `evaluate_script` tool runs JS on the instance. It can be hard-disabled via `disable-script-debugger` in `dw.json` or `SFCC_DISABLE_SCRIPT_DEBUGGER=true`; when disabled it is excluded from `tools/list` and rejected at `tools/call` with `TOOL_NOT_AVAILABLE`
 
 ### 🚀 Operating Modes
 
@@ -484,7 +485,7 @@ sfcc-dev-mcp/
 The server discovers SFCC credentials in this order (highest to lowest priority):
 
 1. **CLI parameter** (`--dw-json /path/to/dw.json`) - Explicit, highest priority
-2. **Environment variables** (`SFCC_HOSTNAME`, `SFCC_USERNAME`, `SFCC_PASSWORD`, `SFCC_CLIENT_ID`, `SFCC_CLIENT_SECRET`)
+2. **Environment variables** (`SFCC_HOSTNAME`, `SFCC_USERNAME`, `SFCC_PASSWORD`, `SFCC_CLIENT_ID`, `SFCC_CLIENT_SECRET`, `SFCC_DISABLE_SCRIPT_DEBUGGER`)
 3. **MCP workspace roots discovery** - Automatically finds `dw.json` in VS Code workspace folders after client connection, and refreshes discovery when the client emits `notifications/roots/list_changed`
 
 `dw.json` authentication supports multiple credential combinations:
@@ -492,6 +493,7 @@ The server discovers SFCC credentials in this order (highest to lowest priority)
 - OAuth (`client-id` + `client-secret`)
 - Both pairs together
 - Optional storefront Basic Auth override for script-debugger storefront triggers (`storefrontUsername` + `storefrontPassword`)
+- Optional script-debugger kill switch (`disable-script-debugger`: `true`/`false`) - disables the arbitrary-code-execution `evaluate_script` tool (also settable via `SFCC_DISABLE_SCRIPT_DEBUGGER`)
 
 When `hostname` is present, at least one complete credential pair must be provided.
 When credentials are provided, `hostname` is required.

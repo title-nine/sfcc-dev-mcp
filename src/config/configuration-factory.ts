@@ -29,6 +29,7 @@ export class ConfigurationFactory {
     clientId?: string;
     clientSecret?: string;
     siteId?: string;
+    disableScriptDebugger?: boolean;
   }): SFCCConfig {
     let config: SFCCConfig;
 
@@ -47,6 +48,7 @@ export class ConfigurationFactory {
         clientId: options.clientId,
         clientSecret: options.clientSecret,
         siteId: options.siteId,
+        disableScriptDebugger: options.disableScriptDebugger,
       };
     }
 
@@ -59,6 +61,7 @@ export class ConfigurationFactory {
     if (options.clientId) {config.clientId = options.clientId;}
     if (options.clientSecret) {config.clientSecret = options.clientSecret;}
     if (options.siteId) {config.siteId = options.siteId;}
+    if (options.disableScriptDebugger !== undefined) {config.disableScriptDebugger = options.disableScriptDebugger;}
 
     this.validate(config);
     return config;
@@ -116,6 +119,9 @@ export class ConfigurationFactory {
     if (dwConfig['code-version']) {
       config.codeVersion = dwConfig['code-version'];
     }
+
+    // Map script debugger disable flag (default: enabled)
+    config.disableScriptDebugger = dwConfig['disable-script-debugger'] ?? false;
 
     return config;
   }
@@ -229,6 +235,7 @@ export class ConfigurationFactory {
       clientId: undefined,
       clientSecret: undefined,
       siteId: undefined,
+      disableScriptDebugger: false,
     };
   }
 }

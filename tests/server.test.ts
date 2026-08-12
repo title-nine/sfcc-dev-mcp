@@ -251,6 +251,98 @@ describe('SFCCDevServer', () => {
     expect(mockLogCapabilityProbe).toHaveBeenCalledTimes(1);
   });
 
+  it('hides the script debugger tool when disableScriptDebugger is true but keeps log tools', async () => {
+    mockLogCapabilityProbe.mockResolvedValueOnce('ok');
+
+    const server = new SFCCDevServer({
+      hostname: 'example.sandbox.us01.dx.commercecloud.salesforce.com',
+      clientId: 'client-id',
+      clientSecret: 'client-secret',
+      disableScriptDebugger: true,
+    });
+    expect(server).toBeDefined();
+
+    const mockServer = getLatestMockServer();
+    const listToolsHandler = getListToolsHandler(mockServer);
+    const result = await listToolsHandler();
+
+    const toolNames = (result.tools as Array<{ name: string }>).map(tool => tool.name);
+    expect(toolNames).not.toContain('evaluate_script');
+    expect(toolNames).toContain('search_logs');
+    expect(toolNames).toContain('get_latest_error');
+
+    const expectedCount = AGENT_INSTRUCTION_TOOLS.length +
+      SFCC_DOCUMENTATION_TOOLS.length +
+      SFRA_DOCUMENTATION_TOOLS.length +
+      ISML_DOCUMENTATION_TOOLS.length +
+      CARTRIDGE_GENERATION_TOOLS.length +
+      LOG_TOOLS.length +
+      JOB_LOG_TOOLS.length +
+      SYSTEM_OBJECT_TOOLS.length +
+      CODE_VERSION_TOOLS.length;
+
+    expect(result.tools).toHaveLength(expectedCount);
+  });
+
+  it('rejects evaluate_script with TOOL_NOT_AVAILABLE when script debugger is disabled', async () => {
+    const server = new SFCCDevServer({
+      hostname: 'example.sandbox.us01.dx.commercecloud.salesforce.com',
+      username: 'user',
+      password: 'pass',
+      disableScriptDebugger: true,
+    });
+    const serverAny = server as unknown as {
+      handlers: Array<{ canHandle: (toolName: string) => boolean; handle: jest.Mock }>;
+      instructionAdvisor: { getNotice: jest.Mock };
+    };
+
+    const mockHandler = {
+      canHandle: (toolName: string) => toolName === 'evaluate_script',
+      handle: jest.fn().mockResolvedValue({
+        content: [{ type: 'text', text: 'should not run' }],
+        isError: false,
+      }),
+      dispose: jest.fn().mockResolvedValue(undefined),
+    };
+
+    serverAny.handlers = [mockHandler];
+    serverAny.instructionAdvisor = { getNotice: jest.fn().mockResolvedValue(undefined) };
+
+    const mockServer = getLatestMockServer();
+    const callToolHandler = getCallToolHandler(mockServer);
+    const result = await callToolHandler({
+      params: {
+        name: 'evaluate_script',
+        arguments: { script: 'return 1;' },
+      },
+    }) as {
+      isError: boolean;
+      content: Array<{ type: string; text: string }>;
+      structuredContent?: { error?: { code?: string } };
+    };
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain('Tool not available in current mode');
+    expect(result.structuredContent?.error?.code).toBe('TOOL_NOT_AVAILABLE');
+    expect(mockHandler.handle).not.toHaveBeenCalled();
+  });
+
+  it('includes the script debugger tool by default when log capability is available', async () => {
+    const server = new SFCCDevServer({
+      hostname: 'example.sandbox.us01.dx.commercecloud.salesforce.com',
+      username: 'user',
+      password: 'pass',
+    });
+    expect(server).toBeDefined();
+
+    const mockServer = getLatestMockServer();
+    const listToolsHandler = getListToolsHandler(mockServer);
+    const result = await listToolsHandler();
+
+    const toolNames = (result.tools as Array<{ name: string }>).map(tool => tool.name);
+    expect(toolNames).toContain('evaluate_script');
+  });
+
   it('returns tool error for unknown tools', async () => {
     const server = new SFCCDevServer({ hostname: '' });
     const serverAny = server as unknown as {

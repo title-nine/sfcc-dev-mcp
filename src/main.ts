@@ -22,7 +22,7 @@
 
 import { SFCCDevServer } from './core/server.js';
 import { ConfigurationFactory } from './config/configuration-factory.js';
-import { parseCommandLineArgs, hasEnvironmentCredentials } from './config/cli-options.js';
+import { parseCommandLineArgs, hasEnvironmentCredentials, parseBoolean } from './config/cli-options.js';
 import { Logger } from './utils/logger.js';
 
 function redactCliArgs(args: string[]): string[] {
@@ -81,6 +81,14 @@ async function main(): Promise<void> {
       logger.log('[main] Environment variables provide SFCC credentials');
     }
 
+    // Optional hard kill switch for the script debugger tool (arbitrary code execution)
+    const disableScriptDebugger = process.env.SFCC_DISABLE_SCRIPT_DEBUGGER !== undefined
+      ? parseBoolean(process.env.SFCC_DISABLE_SCRIPT_DEBUGGER, 'SFCC_DISABLE_SCRIPT_DEBUGGER')
+      : undefined;
+    if (disableScriptDebugger) {
+      logger.log('[main] Script debugger tool is DISABLED (SFCC_DISABLE_SCRIPT_DEBUGGER=true)');
+    }
+
     // Determine initial configuration source
     // - If CLI path provided: use it
     // - If env vars set: use them
@@ -96,6 +104,7 @@ async function main(): Promise<void> {
       password: process.env.SFCC_PASSWORD,
       clientId: process.env.SFCC_CLIENT_ID,
       clientSecret: process.env.SFCC_CLIENT_SECRET,
+      disableScriptDebugger,
     });
 
     logger.log(`[main] Config created - hostname: "${config.hostname}"`);

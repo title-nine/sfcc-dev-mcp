@@ -302,6 +302,52 @@ describe('dw-json-loader.ts and configuration-factory.ts', () => {
       }).toThrow('Storefront credentials must include both storefrontUsername and storefrontPassword');
     });
 
+    it('should map disable-script-debugger flag from dw.json', () => {
+      const dwJson: DwJsonConfig = {
+        hostname: 'test-instance.demandware.net',
+        username: 'testuser',
+        password: 'testpass',
+        'disable-script-debugger': true,
+      };
+
+      const testFile = join(testDir, 'valid-dw.json');
+      writeFileSync(testFile, JSON.stringify(dwJson, null, 2));
+
+      const config = ConfigurationFactory.create({
+        dwJsonPath: testFile,
+      });
+
+      expect(config.disableScriptDebugger).toBe(true);
+    });
+
+    it('should default disableScriptDebugger to false when not specified', () => {
+      const dwJson: DwJsonConfig = {
+        hostname: 'test-instance.demandware.net',
+        username: 'testuser',
+        password: 'testpass',
+      };
+
+      const testFile = join(testDir, 'valid-dw.json');
+      writeFileSync(testFile, JSON.stringify(dwJson, null, 2));
+
+      const config = ConfigurationFactory.create({
+        dwJsonPath: testFile,
+      });
+
+      expect(config.disableScriptDebugger).toBe(false);
+    });
+
+    it('should accept disableScriptDebugger from options', () => {
+      const config = ConfigurationFactory.create({
+        hostname: 'test-hostname.demandware.net',
+        username: 'testuser',
+        password: 'testpass',
+        disableScriptDebugger: true,
+      });
+
+      expect(config.disableScriptDebugger).toBe(true);
+    });
+
     it('should override dw.json with command-line options', () => {
       const validDwJson: DwJsonConfig = {
         hostname: 'test-instance.demandware.net',

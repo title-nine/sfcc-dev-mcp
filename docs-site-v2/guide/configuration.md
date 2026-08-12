@@ -8,7 +8,7 @@ description: Configure SFCC Dev MCP with dw.json, environment variables, workspa
 The server discovers credentials in this priority order:
 
 1. `--dw-json /path/to/dw.json`
-2. Environment variables (`SFCC_HOSTNAME`, `SFCC_USERNAME`, `SFCC_PASSWORD`, `SFCC_CLIENT_ID`, `SFCC_CLIENT_SECRET`)
+2. Environment variables (`SFCC_HOSTNAME`, `SFCC_USERNAME`, `SFCC_PASSWORD`, `SFCC_CLIENT_ID`, `SFCC_CLIENT_SECRET`, `SFCC_DISABLE_SCRIPT_DEBUGGER`)
 3. Workspace auto-discovery (VS Code workspace root containing a `dw.json`)
 
 Environment variables example:
@@ -77,6 +77,7 @@ Use this when you want WebDAV-backed tooling with username/password credentials.
 | `client-id` / `client-secret` | OCAPI Data API + WebDAV-backed tools | Enables system/custom objects, site prefs, code versions, and can also authenticate WebDAV tools |
 | `code-version` | Code version operations | Optional default |
 | `site-id` | Site-specific actions | Optional |
+| `disable-script-debugger` | Security | `true` hard-disables the arbitrary-code-execution `evaluate_script` tool (also settable via `SFCC_DISABLE_SCRIPT_DEBUGGER=true`); when disabled it is removed from `tools/list` and rejected at `tools/call` |
 
 </div>
 
@@ -95,7 +96,7 @@ Use this when you want WebDAV-backed tooling with username/password credentials.
 | Job logs | — | ✔ (requires WebDAV-capable credentials) |
 | System & custom objects / site prefs | — | ✔ (requires client-id/client-secret) |
 | Code versions | — | ✔ (requires client-id/client-secret) |
-| Script debugger | — | ✔ (requires WebDAV-capable credentials) |
+| Script debugger | — | ✔ (requires WebDAV-capable credentials; disabled by `disable-script-debugger`) |
 
 </div>
 

@@ -28,6 +28,8 @@ export interface SFCCConfig {
   siteId?: string;
   /** Code version for cartridge deployment */
   codeVersion?: string;
+  /** Disable the script debugger tool to prevent arbitrary code execution on the instance */
+  disableScriptDebugger?: boolean;
 }
 
 /**
@@ -53,6 +55,8 @@ export interface DwJsonConfig {
   'client-secret'?: string;
   /** Optional site ID for SFCC instance */
   'site-id'?: string;
+  /** Optional flag to disable the script debugger tool (arbitrary code execution) */
+  'disable-script-debugger'?: boolean;
 }
 
 /**

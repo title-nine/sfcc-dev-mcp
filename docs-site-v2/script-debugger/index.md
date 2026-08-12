@@ -7,6 +7,10 @@ description: Execute JavaScript safely in SFCC sandboxes with evaluate_script, d
 
 Use `evaluate_script` to execute JavaScript on a sandbox instance via the script debugger API.
 
+<Callout title="Arbitrary code execution" variant="warn">
+`evaluate_script` runs arbitrary JavaScript on your SFCC instance with the privileges of the configured credentials. To hard-disable it, set `"disable-script-debugger": true` in `dw.json` or `SFCC_DISABLE_SCRIPT_DEBUGGER=true` in the environment. When disabled, the tool is removed from `tools/list` and rejected with a `TOOL_NOT_AVAILABLE` error.
+</Callout>
+
 ## Quick start
 
 Prompt:

@@ -10,7 +10,15 @@ export interface CliOptions {
 const TRUE_VALUES = new Set(['true', '1', 'yes']);
 const FALSE_VALUES = new Set(['false', '0', 'no']);
 
-function parseBoolean(value: string): boolean {
+/**
+ * Parse a strict boolean token.
+ *
+ * @param value - Raw string to parse
+ * @param label - Label used in error messages (e.g., '--debug' or 'SFCC_DISABLE_SCRIPT_DEBUGGER')
+ * @returns Parsed boolean
+ * @throws Error if the value is not a recognized boolean token
+ */
+export function parseBoolean(value: string, label = 'value'): boolean {
   const normalized = value.toLowerCase();
 
   if (TRUE_VALUES.has(normalized)) {
@@ -22,7 +30,7 @@ function parseBoolean(value: string): boolean {
   }
 
   throw new Error(
-    `Invalid value for --debug: "${value}". Use true/false, 1/0, or yes/no.`,
+    `Invalid value for ${label}: "${value}". Use true/false, 1/0, or yes/no.`,
   );
 }
 
@@ -60,7 +68,7 @@ export function parseCommandLineArgs(argv: string[] = process.argv.slice(2)): Cl
       continue;
     }
 
-    options.debug = parseBoolean(nextToken);
+    options.debug = parseBoolean(nextToken, '--debug');
     i++;
   }
 
