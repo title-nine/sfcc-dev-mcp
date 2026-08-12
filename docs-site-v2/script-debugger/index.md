@@ -56,6 +56,10 @@ Examples for `triggerUrl`:
 - Full URL: `https://your-instance.sandbox.us01.dx.commercecloud.salesforce.com/s/RefArchGlobal/womens/?lang=en_US`
 - Site-relative path: `/womens/?lang=en_US` (resolved to `https://{hostname}/s/{siteId}/womens/?lang=en_US`)
 
+<Callout title="Hostname enforcement" variant="warn">
+`triggerUrl` must reference the configured instance. Full URLs are validated against the configured hostname (and port, when configured); hostname-prefixed inputs are only accepted on an exact host boundary. Prefix-sibling hosts such as `your-instance...example.com` are rejected so storefront credentials are never sent to another host.
+</Callout>
+
 ## Script rules
 
 - Do not use `return` at the top level. Use expressions.

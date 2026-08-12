@@ -476,6 +476,7 @@ sfcc-dev-mcp/
 10. **Script Debugger Tools** (1 tool)
    - Invoke script debugger flows for runtime troubleshooting
    - Supports custom storefront trigger URL/path input (full URLs, `/s/...`, `/on/demandware.store/...`, or site-relative paths resolved to `/s/{siteId}/...`)
+   - Trigger URL host is enforced as an exact authority match (hostname + optional port); prefix-sibling hosts like `example.com.evil.com` are rejected so storefront credentials are never sent to a third-party host
    - Supports credentialed debugging workflows in full mode
    - Arbitrary code execution: the `evaluate_script` tool runs JS on the instance. It can be hard-disabled via `disable-script-debugger` in `dw.json` or `SFCC_DISABLE_SCRIPT_DEBUGGER=true`; when disabled it is excluded from `tools/list` and rejected at `tools/call` with `TOOL_NOT_AVAILABLE`
 

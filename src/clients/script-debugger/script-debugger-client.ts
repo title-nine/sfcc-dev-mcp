@@ -635,6 +635,11 @@ export class ScriptDebuggerClient {
    * - Hostname-prefixed URL without scheme (hostname/...)
    * - Absolute path (/on/demandware.store/... or /s/...)
    * - Site-relative path (/womens/?lang=en_US -> /s/{siteId}/womens/?lang=en_US)
+   *
+   * Security: the configured hostname (and port, when configured) is enforced as an
+   * exact authority match. Prefix-sibling hostnames (e.g. "example.com.evil.com" when
+   * configured for "example.com") are rejected so storefront credentials are never
+   * sent to an attacker-controlled host.
    */
   private resolveTriggerUrl(triggerUrl: string, normalizedSiteId: string): string {
     const raw = triggerUrl.trim();
@@ -643,7 +648,9 @@ export class ScriptDebuggerClient {
       throw new Error('triggerUrl must not be empty');
     }
 
-    const configuredHost = (this.config.hostname ?? '').toLowerCase();
+    const configuredHost = (this.config.hostname ?? '').trim().toLowerCase();
+    const configuredHostname = configuredHost.split(':')[0] ?? '';
+    const configuredPort = configuredHost.includes(':') ? configuredHost.split(':')[1] : undefined;
     const lowerRaw = raw.toLowerCase();
 
     if (lowerRaw.startsWith('http://') || lowerRaw.startsWith('https://')) {
@@ -654,15 +661,32 @@ export class ScriptDebuggerClient {
         throw new Error(`Invalid triggerUrl: ${raw}`);
       }
 
-      if (parsed.hostname.toLowerCase() !== configuredHost) {
+      const urlHostname = parsed.hostname.toLowerCase();
+      const effectivePort = parsed.port || (parsed.protocol === 'https:' ? '443' : '80');
+
+      const hostnameMatches = configuredHostname.length > 0 && urlHostname === configuredHostname;
+      const portMatches = configuredPort === undefined || effectivePort === configuredPort;
+
+      if (!hostnameMatches || !portMatches) {
         throw new Error(`triggerUrl hostname must match configured hostname (${this.config.hostname})`);
       }
+
+      // Strip any embedded userinfo so credentials cannot be smuggled into the URL or logs.
+      parsed.username = '';
+      parsed.password = '';
 
       return parsed.toString();
     }
 
-    if (lowerRaw.startsWith(configuredHost)) {
-      return `${this.protocol}://${raw}`;
+    // Hostname-prefixed URL without scheme: only accept an exact host[:port] match
+    // followed by a boundary ('/', ':' or end-of-string). This prevents prefix tricks
+    // like "example.com.evil.com" (which would otherwise resolve to the attacker's host)
+    // from being treated as the configured instance.
+    if (configuredHost.length > 0 && lowerRaw.startsWith(configuredHost)) {
+      const suffix = lowerRaw.slice(configuredHost.length);
+      if (suffix.length === 0 || suffix.startsWith('/') || suffix.startsWith(':')) {
+        return `${this.protocol}://${raw}`;
+      }
     }
 
     const normalizedPath = raw.startsWith('/') ? raw : `/${raw}`;

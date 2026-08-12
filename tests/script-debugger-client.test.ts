@@ -337,6 +337,125 @@ describe('ScriptDebuggerClient', () => {
       expect(result.error).toContain('triggerUrl hostname must match configured hostname');
     });
 
+    it('should reject full triggerUrl whose hostname is a suffix-extension of the configured host', async () => {
+      mockExists.mockResolvedValue(true);
+      global.fetch = createMockFetch({});
+
+      const result = await client.evaluateScript('1 + 1', {
+        triggerUrl: 'https://test.sandbox.dx.commercecloud.salesforce.com.evil.com/s/RefArch/',
+        timeout: 5000,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('triggerUrl hostname must match configured hostname');
+    });
+
+    it('should never contact a prefix-sibling hostname for hostname-prefixed triggerUrl', async () => {
+      mockExists.mockResolvedValue(true);
+
+      const capturedStorefrontHosts: string[] = [];
+      const defaultFetch = createMockFetch({
+        'GET /eval': () => ({
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ result: 'prefix-guard' }),
+        }),
+      });
+
+      global.fetch = jest.fn(async (url: RequestInfo | URL, options?: RequestInit) => {
+        const urlStr = url.toString();
+        if ((urlStr.includes('/s/') || urlStr.includes('/on/demandware.store/')) && !urlStr.includes('/dw/debugger')) {
+          capturedStorefrontHosts.push(new URL(urlStr).hostname);
+        }
+        return await defaultFetch(url, options);
+      }) as typeof fetch;
+
+      const result = await client.evaluateScript('1 + 1', {
+        triggerUrl: 'test.sandbox.dx.commercecloud.salesforce.com.evil.com/s/RefArch/',
+        timeout: 5000,
+      });
+
+      expect(result.success).toBe(true);
+      expect(capturedStorefrontHosts.length).toBeGreaterThan(0);
+      expect(capturedStorefrontHosts.every(host => host === 'test.sandbox.dx.commercecloud.salesforce.com')).toBe(true);
+    });
+
+    it('should accept a full triggerUrl on the configured host when a matching port is configured', async () => {
+      const localClient = new ScriptDebuggerClient({ ...testConfig, hostname: 'localhost:8080' });
+      mockExists.mockResolvedValue(true);
+
+      const capturedStorefrontUrls: string[] = [];
+      const defaultFetch = createMockFetch({
+        'GET /eval': () => ({
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ result: 'port-ok' }),
+        }),
+      });
+
+      global.fetch = jest.fn(async (url: RequestInfo | URL, options?: RequestInit) => {
+        const urlStr = url.toString();
+        if ((urlStr.includes('/s/') || urlStr.includes('/on/demandware.store/')) && !urlStr.includes('/dw/debugger')) {
+          capturedStorefrontUrls.push(urlStr);
+        }
+        return await defaultFetch(url, options);
+      }) as typeof fetch;
+
+      const triggerUrl = 'http://localhost:8080/s/RefArch/womens/';
+      const result = await localClient.evaluateScript('1 + 1', {
+        triggerUrl,
+        timeout: 5000,
+      });
+
+      expect(result.success).toBe(true);
+      expect(capturedStorefrontUrls).toContain(triggerUrl);
+    });
+
+    it('should reject a full triggerUrl with a mismatched port when a port is configured', async () => {
+      const localClient = new ScriptDebuggerClient({ ...testConfig, hostname: 'localhost:8080' });
+      mockExists.mockResolvedValue(true);
+      global.fetch = createMockFetch({});
+
+      const result = await localClient.evaluateScript('1 + 1', {
+        triggerUrl: 'http://localhost:9090/s/RefArch/',
+        timeout: 5000,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('triggerUrl hostname must match configured hostname');
+    });
+
+    it('should never contact a prefix-sibling hostname for a ported localhost config', async () => {
+      const localClient = new ScriptDebuggerClient({ ...testConfig, hostname: 'localhost:8080' });
+      mockExists.mockResolvedValue(true);
+
+      const capturedStorefrontUrls: string[] = [];
+      const defaultFetch = createMockFetch({
+        'GET /eval': () => ({
+          ok: true,
+          status: 200,
+          text: async () => JSON.stringify({ result: 'port-prefix-guard' }),
+        }),
+      });
+
+      global.fetch = jest.fn(async (url: RequestInfo | URL, options?: RequestInit) => {
+        const urlStr = url.toString();
+        if ((urlStr.includes('/s/') || urlStr.includes('/on/demandware.store/')) && !urlStr.includes('/dw/debugger')) {
+          capturedStorefrontUrls.push(urlStr);
+        }
+        return await defaultFetch(url, options);
+      }) as typeof fetch;
+
+      const result = await localClient.evaluateScript('1 + 1', {
+        triggerUrl: 'localhost:8080.evil.com/s/RefArch/',
+        timeout: 5000,
+      });
+
+      expect(result.success).toBe(true);
+      expect(capturedStorefrontUrls.length).toBeGreaterThan(0);
+      expect(capturedStorefrontUrls.every(url => url.startsWith('http://localhost:8080'))).toBe(true);
+    });
+
     it('should return error when no storefront cartridge found', async () => {
       mockExists.mockResolvedValue(false);
 
